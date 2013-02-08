@@ -1,0 +1,371 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+/*
+ * SelectLoopModels.java
+ *
+ * Created on Jun 15, 2010, 11:18:57 AM
+ */
+
+package swiftmodeller;
+
+import java.io.*;
+import java.util.StringTokenizer;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.table.*;
+import javax.swing.event.*;
+/**
+ *
+ * @author WOLVERINE
+ */
+class RadioButtonRenderer2 implements TableCellRenderer
+{
+    public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column)
+    {
+        if (value==null) return null;
+        return (Component)value;
+    }
+}
+
+class RadioButtonEditor2 extends DefaultCellEditor implements ItemListener
+{
+    private JRadioButton button;
+
+    public RadioButtonEditor2(JCheckBox checkBox)
+    {
+        super(checkBox);
+    }
+
+    public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column)
+    {
+        if (value==null) return null;
+        button = (JRadioButton)value;
+        button.addItemListener(this);
+        return (Component)value;
+    }
+
+    public Object getCellEditorValue()
+    {
+        button.removeItemListener(this);
+        return button;
+    }
+
+    public void itemStateChanged(ItemEvent e)
+    {
+        super.fireEditingStopped();
+    }
+}
+
+public class SelectLoopModel extends javax.swing.JFrame {
+
+    /** Creates new form SelectLoopModels */
+    public SelectLoopModel() {
+
+        labels = SelectModel.labels;
+        colours = SelectModel.colours;
+        profiles = SelectModel.profiles;
+        File file = new File(workpath + sep + "loop_refine.log");
+        contents = new StringBuffer();
+        BufferedReader reader = null;
+
+        try
+        {
+            String text = "";
+            reader = new BufferedReader(new FileReader(file));
+            while (text != null)
+            {
+                text = reader.readLine();
+                if(text.equals(">> Summary of successfully produced loop models:"))
+                {
+                    while ((text = reader.readLine()) != null)
+                    {
+                        StringTokenizer st = new StringTokenizer(text);
+                        while(st.hasMoreTokens())
+                        {
+                            if(!(st.nextToken().equals("Total")))
+                            {
+                                contents.append(text).append("\n");
+                                break;
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            new ErrorClose(this, true, "I/O Error");
+        }
+        finally
+        {
+           try
+            {
+                if (reader != null)
+                {
+                    reader.close();
+                }
+            } catch (IOException e)
+            {
+                new ErrorClose(this, true, "I/O Error");
+            }
+        }
+
+        contents.replace(0, contents.length(), contents.substring(contents.lastIndexOf("--") + 3, contents.length()));
+        temp = contents.toString().split("\n");
+        data = new Object[temp.length][3];
+        columnNames = new String[3];
+        jr = new JRadioButton[temp.length];
+        for(int i = 0 ; i < temp.length; i++)
+        {
+            jr[i] = new JRadioButton("");
+            data[i][0] = jr[i];
+            int j = 1;
+            StringTokenizer st = new StringTokenizer(temp[i]);
+            while(st.hasMoreTokens())
+            {
+                String str = st.nextToken();
+                data[i][j] = str;
+                j++;
+            }
+        }
+
+        columnNames[0] = "Select File";
+        columnNames[1] = "Filename";
+        columnNames[2] = "molpdf";
+
+        dm = new DefaultTableModel(data, columnNames);
+
+        initComponents();
+        this.addWindowListener(new java.awt.event.WindowAdapter()
+        {
+            public void windowClosing(java.awt.event.WindowEvent e)
+            {
+                pulltheplug();
+            }
+        });
+
+        jTable1.getColumn("Select File").setCellRenderer(new RadioButtonRenderer2());
+        jTable1.getColumn("Select File").setCellEditor(new RadioButtonEditor2(new JCheckBox()));
+
+        buttonGroup1 = new ButtonGroup();
+        for(int i = 0 ; i < temp.length; i++)
+        {
+            buttonGroup1.add((JRadioButton)dm.getValueAt(i,0));
+        }
+
+        this.setTitle("Loop Refined Models");
+    }
+
+    /** This method is called from within the constructor to
+     * initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is
+     * always regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        buttonGroup1 = new javax.swing.ButtonGroup();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jTable1 = new javax.swing.JTable();
+        jLabel1 = new javax.swing.JLabel();
+        jButton1 = new javax.swing.JButton();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
+        setName("Form"); // NOI18N
+
+        jScrollPane1.setName("jScrollPane1"); // NOI18N
+
+        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+
+            }
+        ));
+        jTable1.setName("jTable1"); // NOI18N
+        jTable1 = new JTable(dm) {
+            public void tableChanged(TableModelEvent e) {
+                super.tableChanged(e);
+                repaint();
+            }
+        };
+        jTable1.setRowHeight(24);
+        jTable1.getTableHeader().setReorderingAllowed(false);
+        jScrollPane1.setViewportView(jTable1);
+
+        org.jdesktop.application.ResourceMap resourceMap = org.jdesktop.application.Application.getInstance(swiftmodeller.SwiftModellerApp.class).getContext().getResourceMap(SelectLoopModel.class);
+        jLabel1.setFont(resourceMap.getFont("jLabel1.font")); // NOI18N
+        jLabel1.setText(resourceMap.getString("jLabel1.text")); // NOI18N
+        jLabel1.setName("jLabel1"); // NOI18N
+
+        jButton1.setFont(resourceMap.getFont("jButton1.font")); // NOI18N
+        jButton1.setText(resourceMap.getString("jButton1.text")); // NOI18N
+        jButton1.setName("jButton1"); // NOI18N
+        jButton1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                jButton1MousePressed(evt);
+            }
+        });
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(44, 44, 44)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 647, Short.MAX_VALUE)
+                .addGap(39, 39, 39))
+            .addGroup(layout.createSequentialGroup()
+                .addGap(105, 105, 105)
+                .addComponent(jLabel1)
+                .addContainerGap(104, Short.MAX_VALUE))
+            .addGroup(layout.createSequentialGroup()
+                .addGap(250, 250, 250)
+                .addComponent(jButton1)
+                .addContainerGap(259, Short.MAX_VALUE))
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(32, 32, 32)
+                .addComponent(jLabel1)
+                .addGap(18, 18, 18)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 148, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 41, Short.MAX_VALUE)
+                .addComponent(jButton1)
+                .addGap(36, 36, 36))
+        );
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+
+private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+
+        JRadioButton chk = new JRadioButton();
+        cmod = new String();
+        for(int i = 0; i < temp.length; i++)
+        {
+            chk = (JRadioButton)dm.getValueAt(i,0);
+            if(chk.isSelected() == true)
+            {
+                cmod = dm.getValueAt(i,1).toString();
+            }
+        }
+
+        labels[3] = "Loop Refinement";
+        colours[3] = "magenta";
+        profiles[3] = cmod;
+
+        if(template.length == 2)
+        {
+            File log = new File(workpath + sep + "evaluate_model.log");
+            System.gc();
+            while(log.exists())
+            {
+                log.delete();
+            }
+            new EvaluateModel(cmod, this.getComponent(0));
+            new FlushScript(this);
+            log = new File(workpath + sep + "align_mod.log");
+            System.gc();
+            while(log.exists())
+            {
+                log.delete();
+            }
+            new ModAlignment(profiles, this.getComponent(0));
+            new FlushScript(this);
+            log = new File(workpath + sep + "plot_profiles.log");
+            System.gc();
+            while(log.exists())
+            {
+                log.delete();
+            }
+            new PlotGraph(labels, colours, profiles, this.getComponent(0));
+            new FlushScript(this);
+        }
+        else if(template.length > 2)
+        {
+            File log = new File(workpath + sep + "evaluate_model.log");
+            System.gc();
+            while(log.exists())
+            {
+                log.delete();
+            }
+            new EvaluateModel(cmod, this.getComponent(0));
+            new FlushScript(this);
+            log = new File(workpath + sep + "align_seq.log");
+            System.gc();
+            while(log.exists())
+            {
+                log.delete();
+            }
+            new SeqAlignment(profiles, this.getComponent(0));
+            new FlushScript(this);
+            log = new File(workpath + sep + "plot_profiles.log");
+            System.gc();
+            while(log.exists())
+            {
+                log.delete();
+            }
+            new PlotGraph(labels, colours, profiles, this.getComponent(0));
+            new FlushScript(this);
+        }
+        new LoopEvalGraph().setVisible(true);
+        this.setCursor(new Cursor(0));
+        this.setVisible(false);
+}//GEN-LAST:event_jButton1ActionPerformed
+
+private void jButton1MousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButton1MousePressed
+        jButton1.setText("PROCESSING ...");
+}//GEN-LAST:event_jButton1MousePressed
+
+    public void pulltheplug()
+    {
+        new FlushScript(this);
+        new SelectModel().setVisible(true);
+        this.setVisible(false);
+    }
+    /**
+    * @param args the command line arguments
+    */
+    public static void main(String args[]) {
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new SelectLoopModel().setVisible(true);
+            }
+        });
+    }
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.ButtonGroup buttonGroup1;
+    private javax.swing.JButton jButton1;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JTable jTable1;
+    // End of variables declaration//GEN-END:variables
+    private String workpath = SwiftModellerView.workpath;
+    private String sep = SwiftModellerView.sep;
+    private String[] template = Alignment.chk;
+    private String[] labels, colours, profiles;
+    private StringBuffer contents;
+    private DefaultTableModel dm;
+    private Object[][] data;
+    private String[] columnNames, temp;
+    private JRadioButton[] jr;
+    public static String cmod;
+}
